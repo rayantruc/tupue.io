@@ -3,193 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Particle Heart</title>
+    <title>The Breaking Square</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            user-select: none;
         }
-        
-        canvas {
+
+        #game-container {
+            text-align: center;
             cursor: pointer;
         }
+
+        #square {
+            width: 200px;
+            height: 200px;
+            background-color: #3498db;
+            border: 4px solid #2980b9;
+            position: relative;
+            transition: transform 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        #square:active {
+            transform: scale(0.95);
+        }
+
+        /* Crack lines using SVG overlays */
+        .crack {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* The hidden message */
+        #message {
+            display: none;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .cracked-1 #crack1 { opacity: 1; }
+        .cracked-2 #crack2 { opacity: 1; }
+        .cracked-3 #crack3 { opacity: 1; }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-    
+
+    <div id="game-container">
+        <div id="square">
+            <svg class="crack" id="crack1" viewBox="0 0 100 100">
+                <line x1="0" y1="20" x2="40" y2="50" stroke="white" stroke-width="2"/>
+                <line x1="40" y1="50" x2="30" y2="100" stroke="white" stroke-width="2"/>
+            </svg>
+            <svg class="crack" id="crack2" viewBox="0 0 100 100">
+                <line x1="100" y1="10" x2="60" y2="40" stroke="white" stroke-width="2"/>
+                <line x1="60" y1="40" x2="80" y2="70" stroke="white" stroke-width="2"/>
+            </svg>
+            <svg class="crack" id="crack3" viewBox="0 0 100 100">
+                <line x1="20" y1="0" x2="50" y2="40" stroke="white" stroke-width="3"/>
+                <line x1="50" y1="40" x2="100" y2="60" stroke="white" stroke-width="3"/>
+                <line x1="50" y1="40" x2="0" y2="80" stroke="white" stroke-width="3"/>
+            </svg>
+        </div>
+        <h1 id="message">T Autiste</h1>
+    </div>
+
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        const particles = [];
-        const mouse = { x: null, y: null, radius: 150 };
-        let isExploded = false;
-        
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.x;
-            mouse.y = e.y;
-        });
-        
-        canvas.addEventListener('click', () => {
-            isExploded = !isExploded;
-            particles.forEach(p => {
-                if (isExploded) {
-                    const angle = Math.atan2(p.y - canvas.height / 2, p.x - canvas.width / 2);
-                    p.vx = Math.cos(angle) * (Math.random() * 3 + 2);
-                    p.vy = Math.sin(angle) * (Math.random() * 3 + 2);
-                } else {
-                    p.vx = 0;
-                    p.vy = 0;
-                }
-            });
-        });
-        
-        class Particle {
-            constructor(x, y, type = 'heart') {
-                this.baseX = x;
-                this.baseY = y;
-                this.x = x;
-                this.y = y;
-                this.vx = 0;
-                this.vy = 0;
-                this.size = Math.random() * 2 + 1;
-                this.density = Math.random() * 30 + 1;
-                this.type = type;
-            }
-            
-            draw() {
-                if (this.type === 'letter') {
-                    ctx.fillStyle = 'rgba(220, 20, 60, 0.95)';
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = 'rgba(220, 20, 60, 0.5)';
-                } else {
-                    ctx.fillStyle = 'rgba(255, 105, 180, 0.8)';
-                    ctx.shadowBlur = 0;
-                }
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-            
-            update() {
-                if (isExploded) {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.vy += 0.05;
-                } else {
-                    let dx = mouse.x - this.x;
-                    let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    let forceDirectionX = dx / distance;
-                    let forceDirectionY = dy / distance;
-                    let maxDistance = mouse.radius;
-                    let force = (maxDistance - distance) / maxDistance;
-                    let directionX = forceDirectionX * force * this.density;
-                    let directionY = forceDirectionY * force * this.density;
-                    
-                    if (distance < mouse.radius) {
-                        this.x -= directionX;
-                        this.y -= directionY;
-                    } else {
-                        if (this.x !== this.baseX) {
-                            let dx = this.x - this.baseX;
-                            this.x -= dx / 10;
-                        }
-                        if (this.y !== this.baseY) {
-                            let dy = this.y - this.baseY;
-                            this.y -= dy / 10;
-                        }
-                    }
-                }
-            }
-        }
-        
-        function createHeart() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const scale = 15;
-            
-            // Create heart particles
-            for (let t = 0; t < Math.PI * 2; t += 0.015) {
-                const x = scale * 16 * Math.pow(Math.sin(t), 3);
-                const y = -scale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        const square = document.getElementById('square');
+        const message = document.getElementById('message');
+        let clicks = 0;
+        const maxClicks = 4;
+
+        square.addEventListener('click', () => {
+            clicks++;
+
+            if (clicks < maxClicks) {
+                // Add a visual crack class
+                square.classList.add(`cracked-${clicks}`);
                 
-                // Create a moderate fill
-                for (let r = 0; r < scale * 16; r += 15) {
-                    const fillX = (x / (scale * 16)) * r;
-                    const fillY = (y / (scale * 16)) * r;
-                    
-                    particles.push(new Particle(
-                        centerX + fillX + (Math.random() - 0.5) * 5,
-                        centerY + fillY + (Math.random() - 0.5) * 5,
-                        'heart'
-                    ));
-                }
+                // Slight shake effect
+                square.style.transform = `translate(${Math.random() * 5}px, ${Math.random() * 5}px)`;
+                setTimeout(() => square.style.transform = 'translate(0,0)', 50);
+            } 
+            else {
+                // Break the square
+                square.style.display = 'none';
+                message.style.display = 'block';
+                document.body.style.backgroundColor = '#ecf0f1';
             }
-            
-            // Create letter D with particles
-            createLetterD(centerX, centerY);
-        }
-        
-        function createLetterD(centerX, centerY) {
-            const letterScale = 70;
-            const spacing = 4;
-            
-            // Vertical line of D (make it thicker with multiple lines)
-            for (let offset = -8; offset <= 8; offset += 4) {
-                for (let y = -letterScale; y <= letterScale; y += spacing) {
-                    particles.push(new Particle(centerX - letterScale * 0.35 + offset, centerY + y, 'letter'));
-                }
-            }
-            
-            // Curved part of D (thicker semicircle with multiple layers)
-            for (let radius = letterScale * 0.65; radius <= letterScale * 0.8; radius += 4) {
-                for (let angle = -Math.PI / 2; angle <= Math.PI / 2; angle += 0.08) {
-                    const x = centerX - letterScale * 0.35 + Math.cos(angle) * radius;
-                    const y = centerY + Math.sin(angle) * letterScale;
-                    particles.push(new Particle(x, y, 'letter'));
-                }
-            }
-            
-            // Add extra particles at connection points for smoothness
-            for (let y = -letterScale; y <= letterScale; y += spacing * 2) {
-                for (let x = 0; x <= 12; x += 4) {
-                    particles.push(new Particle(centerX - letterScale * 0.35 + x, centerY + y, 'letter'));
-                }
-            }
-        }
-        
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-            }
-            
-            requestAnimationFrame(animate);
-        }
-        
-        createHeart();
-        animate();
-        
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            particles.length = 0;
-            createHeart();
         });
     </script>
 </body>
