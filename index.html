@@ -3,116 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Breaking Square</title>
+    <title>The Glowing Square</title>
     <style>
         body {
+            background-color: #050505;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
-            font-family: 'Arial', sans-serif;
             overflow: hidden;
-            user-select: none;
+            font-family: 'Arial Black', sans-serif;
         }
 
-        #game-container {
-            text-align: center;
-            cursor: pointer;
-        }
-
-        #square {
-            width: 200px;
-            height: 200px;
-            background-color: #3498db;
-            border: 4px solid #2980b9;
+        .container {
             position: relative;
-            transition: transform 0.1s;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
-        #square:active {
-            transform: scale(0.95);
+        /* The Main Square */
+        #square {
+            width: 180px;
+            height: 180px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 3px solid #00f2ff;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 0 20px #00f2ff, inset 0 0 15px #00f2ff;
+            transition: transform 0.1s;
+            overflow: hidden;
+            z-index: 2;
         }
 
-        /* Crack lines using SVG overlays */
+        /* Crack styling */
         .crack {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+            background: #00f2ff;
+            box-shadow: 0 0 8px #00f2ff;
             opacity: 0;
-            transition: opacity 0.2s;
+            pointer-events: none;
         }
 
-        /* The hidden message */
+        .c1 { width: 120%; height: 2px; top: 20%; left: -10%; transform: rotate(15deg); }
+        .c2 { width: 2px; height: 120%; top: -10%; left: 40%; transform: rotate(5deg); }
+        .c3 { width: 100%; height: 2px; bottom: 30%; left: 0; transform: rotate(-20deg); }
+        .c4 { width: 2px; height: 100%; top: 0; right: 30%; transform: rotate(-15deg); }
+
+        /* Updated Message Container for Image + Text */
+        #message-container {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 20px; /* Space between image and text */
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 1;
+        }
+
         #message {
-            display: none;
-            font-size: 3rem;
-            font-weight: bold;
-            color: #2c3e50;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #ff00de;
+            font-size: 3.5rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px #ff00de, 0 0 30px #ff00de;
+            margin: 0;
         }
 
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            100% { transform: scale(1); }
+        #result-image {
+            width: 150px; /* Adjust size as needed */
+            height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #ff00de;
+            object-fit: cover;
         }
 
-        .cracked-1 #crack1 { opacity: 1; }
-        .cracked-2 #crack2 { opacity: 1; }
-        .cracked-3 #crack3 { opacity: 1; }
+        /* Animations */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(-1deg); }
+            40% { transform: translate(3px, 2px) rotate(1deg); }
+            100% { transform: translate(1px, -2px) rotate(0deg); }
+        }
+
+        .shaking { animation: shake 0.2s infinite; }
+
+        .reveal {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
+    <div class="container">
         <div id="square">
-            <svg class="crack" id="crack1" viewBox="0 0 100 100">
-                <line x1="0" y1="20" x2="40" y2="50" stroke="white" stroke-width="2"/>
-                <line x1="40" y1="50" x2="30" y2="100" stroke="white" stroke-width="2"/>
-            </svg>
-            <svg class="crack" id="crack2" viewBox="0 0 100 100">
-                <line x1="100" y1="10" x2="60" y2="40" stroke="white" stroke-width="2"/>
-                <line x1="60" y1="40" x2="80" y2="70" stroke="white" stroke-width="2"/>
-            </svg>
-            <svg class="crack" id="crack3" viewBox="0 0 100 100">
-                <line x1="20" y1="0" x2="50" y2="40" stroke="white" stroke-width="3"/>
-                <line x1="50" y1="40" x2="100" y2="60" stroke="white" stroke-width="3"/>
-                <line x1="50" y1="40" x2="0" y2="80" stroke="white" stroke-width="3"/>
-            </svg>
+            <div class="crack c1"></div>
+            <div class="crack c2"></div>
+            <div class="crack c3"></div>
+            <div class="crack c4"></div>
         </div>
-        <h1 id="message">T Autiste</h1>
+
+        <div id="message-container">
+            <img id="result-image" src="image.png" alt="Result Image">
+            <h1 id="message">T Autiste</h1>
+        </div>
     </div>
 
     <script>
         const square = document.getElementById('square');
-        const message = document.getElementById('message');
+        const messageContainer = document.getElementById('message-container');
+        const cracks = document.querySelectorAll('.crack');
+        
         let clicks = 0;
-        const maxClicks = 4;
+        const totalSteps = 5;
 
         square.addEventListener('click', () => {
             clicks++;
 
-            if (clicks < maxClicks) {
-                // Add a visual crack class
-                square.classList.add(`cracked-${clicks}`);
-                
-                // Slight shake effect
-                square.style.transform = `translate(${Math.random() * 5}px, ${Math.random() * 5}px)`;
-                setTimeout(() => square.style.transform = 'translate(0,0)', 50);
-            } 
-            else {
-                // Break the square
+            square.classList.add('shaking');
+            setTimeout(() => square.classList.remove('shaking'), 200);
+
+            if (clicks <= cracks.length) {
+                cracks[clicks - 1].style.opacity = '1';
+            }
+
+            square.style.background = `rgba(0, 255, 255, ${clicks * 0.15})`;
+            square.style.boxShadow = `0 0 ${20 + (clicks * 10)}px #00f2ff`;
+
+            if (clicks >= totalSteps) {
                 square.style.display = 'none';
-                message.style.display = 'block';
-                document.body.style.backgroundColor = '#ecf0f1';
+                messageContainer.classList.add('reveal');
+                
+                document.body.style.backgroundColor = "#1a1a1a";
+                setTimeout(() => { document.body.style.backgroundColor = "#050505"; }, 100);
             }
         });
     </script>
